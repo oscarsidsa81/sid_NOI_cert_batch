@@ -181,14 +181,14 @@ class StockPickingBatch ( models.Model ) :
             'stock_picking_batch.action_report_picking_batch',
             raise_if_not_found=False )
         if action :
-            batch_pdf_bytes, _ = action._render_qweb_pdf (
+            batch_pdf_bytes, report_type = action._render_qweb_pdf(
                 self.ids )  # ✅ self.ids, NO picking.ids
         else :
             # Fallback por report_name (por si cambia el external id):
             report = self.env['ir.actions.report']._get_report_from_name (
                 'stock_picking_batch.report_picking_batch' )
             if report :
-                batch_pdf_bytes, _ = report._render_qweb_pdf (
+                batch_pdf_bytes, report_type = report._render_qweb_pdf (
                     self.ids )  # ✅ self.ids
 
         if batch_pdf_bytes :
@@ -199,7 +199,7 @@ class StockPickingBatch ( models.Model ) :
             # Si no hay reporte de batch disponible, podemos (si quieres) meter cada delivery:
             for picking in self.picking_ids :
                 picking_pdf_bytes = self.env.ref (
-                    'stock_picking_batch.action_report_picking_batch' )._render_qweb_pdf (
+                    'stock.action_report_delivery' )._render_qweb_pdf (
                     picking.ids )[0]
                 append_reader (
                     PdfFileReader ( io.BytesIO ( picking_pdf_bytes ),
