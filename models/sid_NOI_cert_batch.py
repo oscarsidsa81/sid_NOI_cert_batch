@@ -133,7 +133,7 @@ class StockPickingBatch(models.Model):
         # Si quieres incluir el informe de cada albarán antes de los certificados (como en tu acción)
         for picking in self.picking_ids:
             # Render del QWeb del albarán
-            picking_pdf_bytes = self.env.ref('stock.action_report_delivery')._render_qweb_pdf(picking.ids)[0]
+            picking_pdf_bytes = self.env.ref('stock_picking_batch.report_picking_batch')._render_qweb_pdf(picking.ids)[0]
             append_pdf(PdfFileReader(io.BytesIO(picking_pdf_bytes)), output)
 
             # Certificados por línea de movimiento
@@ -200,7 +200,7 @@ class StockPickingBatch(models.Model):
 
         for picking in self.picking_ids:
             # Albarán PDF
-            picking_pdf_bytes = self.env.ref('stock.action_report_delivery')._render_qweb_pdf(picking.ids)[0]
+            picking_pdf_bytes = self.env.ref('stock_picking_batch.report_picking_batch')._render_qweb_pdf(picking.ids)[0]
             pdf_lists.append(picking_pdf_bytes)
             pdf_filenames.append(("%s.pdf" % (picking.name or str(picking.id))).replace("/", "-"))
 
