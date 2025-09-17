@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Sample form view -->
+    <record id="sid_NOI_cert_batch_view_form" model="ir.ui.view">
+        <field name="name">sid.NOI.cert.batch.view.form</field>
+        <field name="model">sid.NOI.cert.batch</field>
+        <field name="arch" type="xml">
+            <form string="Sample">
+                <header>
+                    <button name="button_action" string="Submit" type="object" class="btn-primary"/>
+                    <field name="state" widget="statusbar" options="{'clickable': '1'}"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1>
+                            <field name="name" placeholder="e.g Marc Demo"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <field name="active" invisible="1"/>
+                    </group>
+                    <notebook>
+                        <page string="Details">
+                            <field name="description"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- Sample list view -->
+    <record id="sid_NOI_cert_batch_view_list" model="ir.ui.view">
+        <field name="name">sid.NOI.cert.batch.view.list</field>
+        <field name="model">sid.NOI.cert.batch</field>
+        <field name="arch" type="xml">
+            <list string="Samples">
+                <field name="name"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Kanban View -->
+    <record id="sid_NOI_cert_batch_view_kanban" model="ir.ui.view">
+        <field name="name">sid.NOI.cert.batch.view.kanban</field>
+        <field name="model">sid.NOI.cert.batch</field>
+        <field name="arch" type="xml">
+            <kanban>
+                <field name="state"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_global_click">
+                            <field name="name"/>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- Search View -->
+    <record id="sid_NOI_cert_batch_view_search" model="ir.ui.view">
+        <field name="name">sid.NOI.cert.batch.view.search</field>
+        <field name="model">sid.NOI.cert.batch</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <filter string="Draft" name="filter_draft" domain="[('state','=','draft')]"/>
+                <filter string="Confirmed" name="filter_confirmed" domain="[('state','=','confirmed')]"/>
+                <filter string="Done" name="filter_done" domain="[('state','=','done')]"/>
+            </search>
+        </field>
+    </record>
+    <!-- Action -->
+    <record id="sid_NOI_cert_batch_action" model="ir.actions.act_window">
+        <field name="name">Samples</field>
+        <field name="res_model">sid.NOI.cert.batch</field>
+        <field name="view_mode">list,form,kanban</field>
+    </record>
+
+    <!-- Menus -->
+    <menuitem name="Sid NOI Cert Batch"
+              id="sid_NOI_cert_batch_menu_root"/>
+
+    <menuitem name="Samples"
+              id="sid_NOI_cert_batch_menu"
+              parent="sid_NOI_cert_batch_menu_root"
+              action="sid_NOI_cert_batch_action"/>
+</odoo>
