@@ -10,7 +10,7 @@
     'author': 'Cybrosys Techno Solutions',
     'company': 'Cybrosys Techno Solutions',
     'maintainer': 'Cybrosys Techno Solutions',
-    'depends': ['base', 'mail'],
+    'depends': ['base', 'mail','stock'],
     'data': [
         'views/sid_NOI_cert_batch_views.xml',
     ],
