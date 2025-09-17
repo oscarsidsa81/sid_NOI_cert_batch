@@ -19,70 +19,94 @@ class StockPickingBatch ( models.Model ) :
     # -------------------------------------------------------------------------
     # UTILIDADES (reuso 1:1 de tu lógica, adaptado a batch)
     # -------------------------------------------------------------------------
+
+    def _ensure_pdf_bytes(self, data) :
+        """Devuelve bytes de un PDF. Acepta base64 (bytes/str) o bytes PDF."""
+        if not data :
+            raise UserError ( _ ( "El PDF está vacío." ) )
+
+        # Normaliza a bytes
+        if isinstance ( data, memoryview ) :
+            data = data.tobytes ()
+        if isinstance ( data, str ) :
+            data = data.encode ( "utf-8" )
+
+        # ¿Ya es PDF?
+        if data[:4] == b"%PDF" :
+            return data
+
+        # Intentar base64
+        try :
+            decoded = base64.b64decode ( data, validate=False )
+            if decoded and decoded[:4] == b"%PDF" :
+                return decoded
+        except Exception :
+            pass
+
+        # Último intento: quizá venía como texto latin-1 con bytes PDF
+        try :
+            if isinstance ( data, bytes ) and data.decode ( "latin-1",
+                                                            "ignore" ).encode (
+                "latin-1" )[:4] == b"%PDF" :
+                return data
+        except Exception :
+            pass
+
+        raise UserError (
+            _ ( "Formato del PDF no válido (no es PDF ni base64 de PDF)." ) )
+
     def add_watermark(self, pdf_file, watermark_text) :
         try :
-            watermark = PdfFileReader (
-                io.BytesIO ( base64.b64decode ( pdf_file ) ) if isinstance (
-                    pdf_file, str ) else io.BytesIO ( pdf_file ) )
+            raw_pdf = self._ensure_pdf_bytes ( pdf_file )
+            reader = PdfFileReader ( io.BytesIO ( raw_pdf ), strict=False )
             output_pdf = PdfFileWriter ()
 
-            for page_num in range ( watermark.getNumPages () ) :
-                page = watermark.getPage ( page_num )
+            for page_num in range ( reader.getNumPages () ) :
+                page = reader.getPage ( page_num )
                 page_width = float ( page.mediaBox.getWidth () )
                 page_height = float ( page.mediaBox.getHeight () )
                 rotation = page.get ( '/Rotate' ) or 0
 
-                # dividir texto (dos líneas máx)
-                watermark_text_lines = (watermark_text or "").split ( "\n" )
-                watermark_line1 = watermark_text_lines[
-                    0] if watermark_text_lines else ""
-                watermark_line2 = watermark_text_lines[1] if len (
-                    watermark_text_lines ) > 1 else ""
+                # preparar texto
+                lines = (watermark_text or "").split ( "\n" )
+                line1 = lines[0] if lines else ""
+                line2 = lines[1] if len ( lines ) > 1 else ""
 
-                # dibujar watermark
-                watermark_canvas = io.BytesIO ()
-                c = canvas.Canvas ( watermark_canvas,
+                # lienzo watermark
+                wm_buf = io.BytesIO ()
+                c = canvas.Canvas ( wm_buf,
                                     pagesize=(page_width, page_height) )
                 c.setFont ( "Helvetica", 10 )
                 c.setFillGray ( 0.2 )
 
-                text_x_position = 10
-                text_y_position = 20
-
+                x, y = 10, 20
                 if rotation == 90 :
-                    c.translate ( page_height, 0 )
+                    c.translate ( page_height, 0 );
                     c.rotate ( 90 )
                 elif rotation == 180 :
-                    c.translate ( page_width, page_height )
+                    c.translate ( page_width, page_height );
                     c.rotate ( 180 )
                 elif rotation == 270 :
-                    c.translate ( 0, page_width )
+                    c.translate ( 0, page_width );
                     c.rotate ( 270 )
 
-                if watermark_line1 :
-                    c.drawString ( text_x_position, text_y_position,
-                                   watermark_line1 )
-                if watermark_line2 :
-                    c.drawString ( text_x_position, text_y_position - 12,
-                                   watermark_line2 )
-
+                if line1 : c.drawString ( x, y, line1 )
+                if line2 : c.drawString ( x, y - 12, line2 )
                 c.save ()
 
-                watermark_pdf = PdfFileReader (
-                    io.BytesIO ( watermark_canvas.getvalue () ) )
-                watermark_page = watermark_pdf.getPage ( 0 )
-                page.mergePage ( watermark_page )
+                wm_reader = PdfFileReader ( io.BytesIO ( wm_buf.getvalue () ),
+                                            strict=False )
+                page.mergePage ( wm_reader.getPage ( 0 ) )
                 output_pdf.addPage ( page )
 
-            output_stream = io.BytesIO ()
-            output_pdf.write ( output_stream )
-            return output_stream.getvalue ()
+            out = io.BytesIO ()
+            output_pdf.write ( out )
+            return out.getvalue ()
 
         except Exception as e :
             raise UserError (
                 _ ( "Ocurrió un error al intentar modificar el PDF. "
-                    "Por favor, compruebe que no está dañado.\nError: %s" ) % e
-            )
+                    "Por favor, compruebe que no está dañado.\nError: %s" ) % e )
 
     def _update_or_create_document_batch(self, attachment_id) :
         """Crea/actualiza el Document para el lote (no en el picking)."""
@@ -107,25 +131,37 @@ class StockPickingBatch ( models.Model ) :
             document = Documents.create ( values )
         return document
 
-    @staticmethod
     def convert_multiple_base64_to_pdf_and_zip(pdf_bytes_list, pdf_filenames) :
         zip_buffer = io.BytesIO ()
         with zipfile.ZipFile ( zip_buffer, 'w',
                                zipfile.ZIP_DEFLATED ) as zip_file :
             for pdf_bytes, pdf_filename in zip ( pdf_bytes_list,
                                                  pdf_filenames ) :
-                # pdf_bytes puede venir en bytes ya “limpios”
-                pdf_stream = io.BytesIO ( pdf_bytes )
-                pdf_reader = PdfFileReader ( pdf_stream )
+                # Asegura bytes PDF reales (acepta base64/bytes)
+                raw_pdf = pdf_bytes
+                try :
+                    raw_pdf = self._ensure_pdf_bytes ( pdf_bytes )
+                except Exception :
+                    # Si viene ya de render_qweb_pdf (bytes PDF), seguirá valiendo
+                    if isinstance ( pdf_bytes,
+                                    (bytes, bytearray) ) and pdf_bytes[
+                        :4] == b"%PDF" :
+                        raw_pdf = pdf_bytes
+                    else :
+                        raise
+
+                pdf_reader = PdfFileReader ( io.BytesIO ( raw_pdf ),
+                                             strict=False )
                 pdf_writer = PdfFileWriter ()
                 for page_num in range ( pdf_reader.getNumPages () ) :
                     pdf_writer.addPage ( pdf_reader.getPage ( page_num ) )
-                output_pdf_stream = io.BytesIO ()
-                pdf_writer.write ( output_pdf_stream )
-                output_pdf_stream.seek ( 0 )
-                zip_file.writestr ( pdf_filename, output_pdf_stream.read () )
-        zip_data = zip_buffer.getvalue ()
-        return base64.b64encode ( zip_data ).decode ( 'utf-8' )
+
+                out = io.BytesIO ()
+                pdf_writer.write ( out )
+                out.seek ( 0 )
+                zip_file.writestr ( pdf_filename, out.read () )
+
+        return base64.b64encode ( zip_buffer.getvalue () ).decode ( 'utf-8' )
 
     # -------------------------------------------------------------------------
     # ACCIÓN 1: PDF ÚNICO (MERGED) EN EL LOTE
@@ -163,7 +199,7 @@ class StockPickingBatch ( models.Model ) :
             # Si no hay reporte de batch disponible, podemos (si quieres) meter cada delivery:
             for picking in self.picking_ids :
                 picking_pdf_bytes = self.env.ref (
-                    'stock.action_report_delivery' )._render_qweb_pdf (
+                    'stock_picking_batch.action_report_picking_batch' )._render_qweb_pdf (
                     picking.ids )[0]
                 append_reader (
                     PdfFileReader ( io.BytesIO ( picking_pdf_bytes ),
@@ -286,7 +322,7 @@ class StockPickingBatch ( models.Model ) :
 
         attachment_vals = {
             'name' : _ ( "Certificados Lote (ZIP) - %s" ) % (
-                        self.name or self.id),
+                    self.name or self.id),
             'datas' : b64_zip_files,
             'res_model' : 'stock.picking.batch',
             'res_id' : self.id,
