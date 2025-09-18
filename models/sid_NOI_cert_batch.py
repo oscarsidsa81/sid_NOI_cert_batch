@@ -177,7 +177,7 @@ class StockPickingBatch ( models.Model ) :
 
         # 1) Render del QWeb del BATCH (modelo stock.picking.batch) → SOLO UNA VEZ
         batch_pdf_bytes = None
-        action = self.env.ref (
+        action = self.env['stock.picking'].ref (
             'stock.action_report_delivery',
             raise_if_not_found=False )
         if action :
@@ -198,7 +198,7 @@ class StockPickingBatch ( models.Model ) :
         else :
             # Si no hay reporte de batch disponible, podemos (si quieres) meter cada delivery:
             for picking in self.picking_ids :
-                picking_pdf_bytes = self.env.ref (
+                picking_pdf_bytes = self.env['stock.picking'].ref (
                     'stock.action_report_delivery' )._render_qweb_pdf (
                     picking.ids )[0]
                 append_reader (
