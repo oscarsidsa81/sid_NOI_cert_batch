@@ -1,5 +1,3 @@
-<!-- reports/report_notice_inspection_templates.xml -->
-<?xml version="1.0" encoding="UTF-8"?>
 <odoo>
   <template id="report_notice_inspection_template"
             name="Notificaciones de inspección (QWeb)">
