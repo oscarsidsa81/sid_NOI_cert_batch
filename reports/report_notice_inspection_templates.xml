@@ -1,163 +1,221 @@
 <odoo>
-  <template id="sid_report_picking_batch_noi_template"
-            name="Notificaciones de inspección (QWeb)">
-    <!-- Tu plantilla original, sin cambios en el t-name -->
-    <t t-name="sid_NOI_cert_batch.sid_report_picking_batch_noi">
-      <t t-call="web.html_container">
-        <t t-foreach="docs" t-as="o">
-          <!-- Recordsets auxiliares -->
-          <t t-set="orders" t-value="o.picking_ids.mapped('group_id.sale_id')"/>
-          <t t-set="has_picks" t-value="bool(o.picking_ids)"/>
-          <t t-set="has_orders" t-value="bool(orders)"/>
-          <t t-set="has_moves" t-value="bool(o.move_ids)"/>
-          <t t-set="has_move_lines" t-value="bool(o.move_ids.mapped('move_line_ids'))"/>
-          <t t-set="has_any_cert" t-value="bool(o.move_ids.mapped('move_line_ids').mapped('certificate_ids'))"/>
+    <template id="sid_report_picking_batch_noi_template"
+              name="Notificaciones de inspección (QWeb)">
+        <!-- Tu plantilla original, sin cambios en el t-name -->
+        <t t-name="sid_NOI_cert_batch.sid_report_picking_batch_noi">
+            <t t-call="web.html_container">
+                <t t-foreach="docs" t-as="o">
+                    <!-- Recordsets auxiliares -->
+                    <t t-set="orders" t-value="o.picking_ids.mapped('group_id.sale_id')"/>
+                    <t t-set="has_picks" t-value="bool(o.picking_ids)"/>
+                    <t t-set="has_orders" t-value="bool(orders)"/>
+                    <t t-set="has_moves" t-value="bool(o.move_ids)"/>
+                    <t t-set="has_move_lines" t-value="bool(o.move_ids.mapped('move_line_ids'))"/>
+                    <t t-set="has_any_cert"
+                       t-value="bool(o.move_ids.mapped('move_line_ids').mapped('certificate_ids'))"/>
 
-          <t t-call="web.external_layout">
-            <div class="page">
+                    <t t-call="web.external_layout">
+                        <div class="page">
 
-              <!-- Encabezado -->
-              <div class="d-flex align-items-center justify-content-between">
-                <h3>Notice For Inspection: <span t-field="o.name"/></h3>
-              </div>
+                            <!-- Encabezado -->
+                            <div class="d-flex align-items-center justify-content-between">
+                                <h3>Notice For Inspection:
+                                    <span t-field="o.name"/>
+                                </h3>
+                            </div>
 
-              <!-- Bloque de alertas globales -->
-              <t t-if="not (has_picks and has_orders and has_moves and has_move_lines and has_any_cert)">
-                <div style="border:1px solid #f5c2c7; background:#f8d7da; color:#842029; padding:10px; margin-top:12px; border-radius:6px;">
-                  <strong>Datos incompletos para el informe:</strong>
-                  <ul style="margin:6px 0 0 18px; line-height:1.3;">
-                    <li t-if="not has_picks">No se han encontrado <strong>pickings</strong> en el lote.</li>
-                    <li t-if="has_picks and not has_orders">No se han podido obtener <strong>pedidos/contratos</strong> desde los pickings.</li>
-                    <li t-if="not has_moves">No hay <strong>movimientos</strong> de stock en el lote.</li>
-                    <li t-if="has_moves and not has_move_lines">No hay <strong>líneas de movimiento</strong> vinculadas a los movimientos.</li>
-                    <li t-if="has_move_lines and not has_any_cert">No hay <strong>certificados</strong> vinculados a ninguna línea del lote.</li>
-                  </ul>
-                </div>
-              </t>
+                            <!-- Bloque de alertas globales -->
+                            <t t-if="not (has_picks and has_orders and has_moves and has_move_lines and has_any_cert)">
+                                <div style="border:1px solid #f5c2c7; background:#f8d7da; color:#842029; padding:10px; margin-top:12px; border-radius:6px;">
+                                    <strong>Datos incompletos para el informe:</strong>
+                                    <ul style="margin:6px 0 0 18px; line-height:1.3;">
+                                        <li t-if="not has_picks">No se han encontrado <strong>pickings</strong> en el
+                                            lote.
+                                        </li>
+                                        <li t-if="has_picks and not has_orders">No se han podido obtener <strong>
+                                            pedidos/contratos
+                                        </strong> desde los pickings.
+                                        </li>
+                                        <li t-if="not has_moves">No hay <strong>movimientos</strong> de stock en el
+                                            lote.
+                                        </li>
+                                        <li t-if="has_moves and not has_move_lines">No hay <strong>líneas de
+                                            movimiento
+                                        </strong> vinculadas a los movimientos.
+                                        </li>
+                                        <li t-if="has_move_lines and not has_any_cert">No hay <strong>certificados
+                                        </strong> vinculados a ninguna línea del lote.
+                                        </li>
+                                    </ul>
+                                </div>
+                            </t>
 
-            </div>
-            <br></br><br></br>
+                        </div>
+                        <br></br>
+                        <br></br>
 
-            <div>
-              <!-- TABLA 1: Pickings -->
-              <table colspan="6" class="table table-condensed" style="width:100%;" border="1">
-                <thead>
-                  <tr style="background-color:#8abdab;">
-                    <th  style="color:#ffffff; font-weight:bold;" class="text-center"><strong>Contract</strong></th>
-                    <th  style="color:#ffffff; font-weight:bold;" class="text-center">Picking Ref</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <t t-if="has_picks">
-                    <tr class="text-center" t-foreach="o.picking_ids" t-as="pick">
-                      <td>
-                        <span class="text-center" t-esc="(pick.group_id and pick.group_id.sale_id and pick.group_id.sale_id.quotations_id and pick.group_id.sale_id.quotations_id.name) or '—'"/>
-                      </td>
-                      <td>
-                        <span class="text-center" t-esc="pick.name or '—'"/>
-                      </td>
-                    </tr>
-                  </t>
-                  <t t-else="">
-                    <tr>
-                      <td colspan="2" class="text-center">— No hay pickings para mostrar —</td>
-                    </tr>
-                  </t>
-                </tbody>
-              </table>
+                        <div>
+                            <!-- TABLA 1: Pickings -->
+                            <table colspan="6" class="table table-condensed" style="width:100%;" border="1">
+                                <thead>
+                                    <tr style="background-color:#8abdab;">
+                                        <th style="color:#ffffff; font-weight:bold;" class="text-center">
+                                            <strong>Contract</strong>
+                                        </th>
+                                        <th style="color:#ffffff; font-weight:bold;" class="text-center">Picking Ref
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-if="has_picks">
+                                        <tr class="text-center" t-foreach="o.picking_ids" t-as="pick">
+                                            <td>
+                                                <span class="text-center"
+                                                      t-esc="(pick.group_id and pick.group_id.sale_id and pick.group_id.sale_id.quotations_id and pick.group_id.sale_id.quotations_id.name) or '—'"/>
+                                            </td>
+                                            <td>
+                                                <span class="text-center" t-esc="pick.name or '—'"/>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                    <t t-else="">
+                                        <tr>
+                                            <td colspan="2" class="text-center">— No hay pickings para mostrar —</td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
 
-              <p style="page-break-after: always;"/>
-              <div colspan="10">
-              <!-- TABLA 2: Operaciones -->
+                            <p style="page-break-after: always;"/>
+                            <div colspan="10">
+                                <!-- TABLA 2: Operaciones -->
 
-              <table class="table table-condensed" style="width:100%;outer-border" >
-                  <thead >
-                    <tr style="background-color:#8abdab;">
-                      <th colspan="10" style="color:#ffffff; font-weight:bold;" >Scope Notified Details</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+                                <table class="table table-condensed" style="width:100%;outer-border">
+                                    <thead>
+                                        <tr style="background-color:#8abdab;">
+                                            <th colspan="10" style="color:#ffffff; font-weight:bold;">Scope Notified
+                                                Details
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
 
-                    <!-- Nivel 1: Contrato -->
-                    <t t-if="has_orders">
-                      <t t-foreach="o.picking_ids.mapped('group_id.sale_id')" t-as="order">
-                        <tr style="background-color:#e8f5e9;">
-                          <td colspan="10">
-                            Contract/Order: <span t-esc="(order.quotations_id and order.quotations_id.name) or '—'"/>
-                          </td>
-                        </tr>
+                                        <!-- Nivel 1: Contrato -->
+                                        <t t-if="has_orders">
+                                            <t t-foreach="o.picking_ids.mapped('group_id.sale_id')" t-as="order">
+                                                <tr style="background-color:#e8f5e9;">
+                                                    <td colspan="10">
+                                                        Contract/Order:
+                                                        <span t-esc="(order.quotations_id and order.quotations_id.name) or '—'"/>
+                                                    </td>
+                                                </tr>
 
-                        <!-- Nivel 2: Movimientos de ese contrato -->
-                        <t t-set="order_moves" t-value="o.move_ids.filtered(lambda m: m.group_id.sale_id == order)"/>
-                        <t t-if="order_moves">
-                          <t t-foreach="order_moves" t-as="move">
-                            <tr style="background-color:f0fff0; border-bottom:1px solid black;border-top:1px solid black;margin-left:20px;" >
-                              <td colspan="10" style="background-color:f0fff0;">
+                                                <!-- Nivel 2: Movimientos de ese contrato -->
+                                                <t t-set="order_moves"
+                                                   t-value="o.move_ids.filtered(lambda m: m.group_id.sale_id == order)"/>
+                                                <t t-if="order_moves">
+                                                    <t t-foreach="order_moves" t-as="move">
+                                                        <tr style="background-color:f0fff0; border-bottom:1px solid black;border-top:1px solid black;margin-left:20px;">
+                                                            <td colspan="10" style="background-color:f0fff0;">
 
-                                Item Nº - <span t-esc="move.item or '—'"/><br/>
-                                <span style="margin-left:20px;">Descripción: </span><span  t-esc="move.description_picking or '—'"/><br/>
-                                <span style="margin-left:20px">Ordered: </span><span t-esc="move.product_uom_qty or 0"/>
-                                 | Notified: <span t-esc="move.quantity_done or 0"/>
-                                 <span style="margin-left:5px;">(</span><span t-esc="(move.product_uom and move.product_uom.name) or '—'"/><span>)</span>
+                                                                Item Nº -
+                                                                <span t-esc="move.item or '—'"/>
+                                                                <br/>
+                                                                <span style="margin-left:20px;">Descripción:</span>
+                                                                <span t-esc="move.description_picking or '—'"/>
+                                                                <br/>
+                                                                <span style="margin-left:20px">Ordered:</span>
+                                                                <span t-esc="move.product_uom_qty or 0"/>
+                                                                | Notified:
+                                                                <span t-esc="move.quantity_done or 0"/>
+                                                                <span style="margin-left:5px;">(</span>
+                                                                <span t-esc="(move.product_uom and move.product_uom.name) or '—'"/>
+                                                                <span>)</span>
 
-                                <!-- Aviso a nivel de movimiento si alguna línea no tiene certificados -->
-                                <t t-set="move_lines_no_cert" t-value="move.move_line_ids.filtered(lambda l: not l.certificate_ids)"/>
-                                <t t-if="move_lines_no_cert">
-                                  <div style="margin:6px 0 0 20px; font-size:12px; color:#8a6d3b;">
-                                    Aviso: este movimiento tiene <t t-esc="len(move_lines_no_cert)"/> línea(s) sin certificados.
-                                  </div>
-                                </t>
+                                                                <!-- Aviso a nivel de movimiento si alguna línea no tiene certificados -->
+                                                                <t t-set="move_lines_no_cert"
+                                                                   t-value="move.move_line_ids.filtered(lambda l: not l.certificate_ids)"/>
+                                                                <t t-if="move_lines_no_cert">
+                                                                    <div style="margin:6px 0 0 20px; font-size:12px; color:#8a6d3b;">
+                                                                        Aviso: este movimiento tiene
+                                                                        <t t-esc="len(move_lines_no_cert)"/>
+                                                                        línea(s) sin certificados.
+                                                                    </div>
+                                                                </t>
 
-                              </td>
-                            </tr>
+                                                            </td>
+                                                        </tr>
 
-                            <!-- Nivel 3: Líneas del movimiento -->
-                            <t t-if="move.move_line_ids">
-                              <t t-foreach="move.move_line_ids" t-as="line">
-                                <tr style="background-color:#e0f2f1;">
-                                    <td style="padding:3px 5px;">
-                                      <span style="margin-left:50px; line-height:1;">
-                                        <t t-if="line.certificate_ids">
-                                          Certificate Nº:
-                                          <t t-foreach="line.certificate_ids" t-as="cert" t-key="cert">
-                                            <span t-esc="cert.name"/>
-                                            <t t-if="not loop.last">, </t>
-                                          </t>
+                                                        <!-- Nivel 3: Líneas del movimiento -->
+                                                        <t t-if="move.move_line_ids">
+                                                            <t t-foreach="move.move_line_ids" t-as="line">
+                                                                <tr style="background-color:#e0f2f1;">
+                                                                    <td style="padding:3px 5px;">
+                                                                        <span style="margin-left:50px; line-height:1;">
+                                                                            <t t-if="line.certificate_ids">
+                                                                                Certificate Nº:
+                                                                                <t t-if="line.certificate_ids">
+                                                                                    Certificate Nº:
+                                                                                    <span t-esc="', '.join(line.certificate_ids.mapped('name'))"/>
+                                                                                </t>
+                                                                                <t t-else="">
+                                                                                    <span style="background:#fff3cd; color:#664d03; padding:2px 6px; border-radius:4px;">
+                                                                                        Sin certificados
+                                                                                    </span>
+                                                                                </t>
+
+                                                                            </t>
+                                                                            <t t-else="">
+                                                                                <span style="background:#fff3cd; color:#664d03; padding:2px 6px; border-radius:4px;">
+                                                                                    Sin certificados
+                                                                                </span>
+                                                                            </t>
+                                                                            ------&gt;
+                                                                            Heat Nº:
+                                                                            <t t-esc="(line.lot_id and line.lot_id.name) or '—'"/>
+                                                                            | Quantity:
+                                                                            <t t-esc="line.qty_done or 0"/>
+                                                                            <span style="margin-left:5px;">(</span>
+                                                                            <span t-esc="(line.product_uom_id and line.product_uom_id.name) or '—'"/>
+                                                                            <span>)</span>
+                                                                        </span>
+                                                                    </td>
+                                                                </tr>
+                                                            </t>
+                                                        </t>
+                                                        <t t-else="">
+                                                            <tr>
+                                                                <td colspan="10" class="text-center">— Sin líneas para
+                                                                    este movimiento —
+                                                                </td>
+                                                            </tr>
+                                                        </t>
+                                                    </t>
+                                                </t>
+                                                <t t-else="">
+                                                    <tr>
+                                                        <td colspan="10" class="text-center">— No hay movimientos
+                                                            asociados a este contrato —
+                                                        </td>
+                                                    </tr>
+                                                </t>
+                                            </t>
                                         </t>
                                         <t t-else="">
-                                          <span style="background:#fff3cd; color:#664d03; padding:2px 6px; border-radius:4px;">
-                                            Sin certificados
-                                          </span>
+                                            <tr>
+                                                <td colspan="10" class="text-center">— No hay contratos/pedidos
+                                                    asociados a los pickings —
+                                                </td>
+                                            </tr>
                                         </t>
-                                        ------&gt;
-                                        Heat Nº: <t t-esc="(line.lot_id and line.lot_id.name) or '—'"/> | Quantity: <t t-esc="line.qty_done or 0"/>
-                                        <span style="margin-left:5px;">(</span><span t-esc="(line.product_uom_id and line.product_uom_id.name) or '—'"/><span>)</span>
-                                     </span>
-                                    </td>
-                                </tr>
-                              </t>
-                            </t>
-                            <t t-else="">
-                              <tr><td colspan="10" class="text-center">— Sin líneas para este movimiento —</td></tr>
-                            </t>
-                          </t>
-                        </t>
-                        <t t-else="">
-                          <tr><td colspan="10" class="text-center">— No hay movimientos asociados a este contrato —</td></tr>
-                        </t>
-                      </t>
-                    </t>
-                    <t t-else="">
-                      <tr><td colspan="10" class="text-center">— No hay contratos/pedidos asociados a los pickings —</td></tr>
-                    </t>
-                  </tbody>
-                </table>
-                </div>
+                                    </tbody>
+                                </table>
+                            </div>
 
-            </div>
-          </t>
+                        </div>
+                    </t>
+                </t>
+            </t>
         </t>
-      </t>
-    </t>
-  </template>
+    </template>
 </odoo>
