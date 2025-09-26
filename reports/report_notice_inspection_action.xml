@@ -1,0 +1,43 @@
+<!-- reports/report_notice_inspection_action.xml -->
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+<!--
+  &lt;!&ndash; Papel A4 horizontal específico del informe &ndash;&gt;
+  <record id="paperformat_notice_inspection_a4_landscape"
+          model="report.paperformat">
+    <field name="name">A4 Horizontal (Notificaciones)</field>
+    <field name="default">False</field>
+    <field name="format">A4</field>
+    <field name="orientation">Landscape</field>
+    <field name="margin_top">10</field>
+    <field name="margin_bottom">10</field>
+    <field name="margin_left">10</field>
+    <field name="margin_right">10</field>
+    <field name="header_line">False</field>
+    <field name="header_spacing">10</field>
+  </record>
+-->
+
+  <!-- Acción del informe -->
+  <record id="action_report_notice_inspection"
+          model="ir.actions.report">
+    <field name="name">Notificaciones de inspección</field>
+    <field name="model">stock.picking.batch</field>
+    <field name="report_type">qweb-pdf</field>
+
+    <!-- Debe coincidir con el t-name de la plantilla -->
+    <field name="report_name">stock_picking_batch.sid_report_picking_batch_noi</field>
+
+    <!-- Suele ponerse igual que report_name -->
+    <field name="report_file">stock_picking_batch.sid_report_picking_batch_noi</field>
+
+    <field name="paperformat_id" ref="base.paperformat_euro"/>
+    <field name="print_report_name">
+      (object.name or 'Notificaciones de inspección')
+    </field>
+    <field name="binding_model_id" ref="stock_picking_batch.model_stock_picking_batch"/>
+    <field name="binding_type">report</field>
+  </record>
+
+</odoo>

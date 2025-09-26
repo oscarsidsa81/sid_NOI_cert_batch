@@ -1,0 +1,102 @@
+<!-- reports/report_notice_inspection_templates.xml -->
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+  <template id="report_notice_inspection_template"
+            name="Notificaciones de inspección (QWeb)">
+    <!-- Tu plantilla original, sin cambios en el t-name -->
+    <t t-name="stock_picking_batch.sid_report_picking_batch_noi">
+      <t t-call="web.html_container">
+        <t t-foreach="docs" t-as="o">
+          <!-- Recordsets auxiliares -->
+          <t t-set="orders" t-value="o.picking_ids.mapped('group_id.sale_id')"/>
+
+          <t t-call="web.external_layout">
+            <div class="page">
+
+              <!-- Encabezado -->
+              <div class="d-flex align-items-center justify-content-between">
+                <h3>Notice For Inspection: <span t-field="o.name"/></h3>
+              </div>
+
+              </div>
+              <br></br><br></br>
+            <div>
+              <!-- TABLA 1: Pickings -->
+              <table colspan="6" class="table table-condensed" style="width:100%;" border="1">
+                <thead>
+                  <tr style="background-color:#8abdab;">
+                    <th  style="color:#ffffff; font-weight:bold;" class="text-center"><strong>Contract</strong></th>
+                    <th  style="color:#ffffff; font-weight:bold;" class="text-center">Picking Ref</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="text-center" t-foreach="o.picking_ids" t-as="pick">
+                    <td>
+                      <span class="text-center" t-field="pick.group_id.sale_id.quotations_id.name"/>
+                    </td>
+                    <td>
+                      <span class="text-center" t-field="pick.name"/>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <p style="page-break-after: always;"/>
+              <div colspan="10">
+              <!-- TABLA 2: Operaciones -->
+
+              <table class="table table-condensed" style="width:100%;outer-border" >
+                  <thead >
+                    <tr style="background-color:#8abdab;">
+                      <th colspan="10" style="color:#ffffff; font-weight:bold;" >Scope Notified Details</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+
+                    <!-- Nivel 1: Contrato -->
+                    <t t-foreach="o.picking_ids.mapped('group_id.sale_id')" t-as="order">
+                      <tr style="background-color:#e8f5e9;">
+                        <td colspan="10">
+                          Contract/Order: <span t-esc="order.quotations_id.name"/>
+                        </td>
+                      </tr>
+
+                      <!-- Nivel 2: Movimientos de ese contrato -->
+                      <t t-foreach="o.move_ids.filtered(lambda m: m.group_id.sale_id == order)" t-as="move">
+                        <tr style="background-color:f0fff0; border-bottom:1px solid black;border-top:1px solid black;margin-left:20px;" >
+                          <td colspan="10" style="background-color:f0fff0;">
+
+                            Item Nº - <span t-esc="move.item"/><br/>
+                            <span style="margin-left:20px;">Descripción: </span><span  t-esc="move.description_picking"/><br/>
+                            <span style="margin-left:20px">Ordered: </span><span t-esc="move.product_uom_qty"/>
+                             | Notified: <span t-esc="move.quantity_done"/>
+                             <span style="margin-left:5px;">(</span><span t-esc="move.product_uom.name"/><span>)</span>
+
+                          </td>
+                        </tr>
+
+                        <!-- Nivel 3: Líneas del movimiento -->
+                        <t t-foreach="move.move_line_ids" t-as="line">
+                          <tr style="background-color:#e0f2f1;">
+                              <td style="padding:3px 5px;">
+                                <span style="margin-left:50px; line-height:1;">
+                                  Certificate Nº: <t style="margin-right:20px;" t-esc="line.certificate_ids[0].name"/>
+                                    ------&gt;
+                                    Heat Nº: <t style="margin-left:20px;" t-esc="line.lot_id.name"/> | Quantity: <t t-esc="line.qty_done"/>
+                                    <span style="margin-left:5px;">(</span><span t-esc="line.product_uom_id.name"/><span>)</span>
+                                 </span>
+                              </td>
+                          </tr>
+                        </t>
+                      </t>
+                    </t>
+                  </tbody>
+                </table>
+                </div>
+            </div>
+          </t>
+        </t>
+      </t>
+    </t>
+  </template>
+</odoo>
