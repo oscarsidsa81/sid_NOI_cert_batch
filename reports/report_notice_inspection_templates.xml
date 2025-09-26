@@ -1,5 +1,5 @@
 <odoo>
-  <template id="sid_NOI_cert_batch.report_notice_inspection_template"
+  <template id="sid_report_picking_batch_noi_template"
             name="Notificaciones de inspección (QWeb)">
     <!-- Tu plantilla original, sin cambios en el t-name -->
     <t t-name="sid_NOI_cert_batch.sid_report_picking_batch_noi">

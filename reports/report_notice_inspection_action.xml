@@ -19,7 +19,7 @@
 -->
 
   <!-- Acción del informe -->
-  <record id="sid_NOI_cert_batch.action_report_notice_inspection"
+  <record id="action_report_notice_inspection"
           model="ir.actions.report">
     <field name="name">Notificaciones de inspección</field>
     <field name="model">stock.picking.batch</field>
